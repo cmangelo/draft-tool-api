@@ -33,6 +33,17 @@ function convertCSVToJS(csv, groupId) {
     return players;
 };
 
+exports.findByGroup = async (req, res) => {
+    try {
+        let players = await Player.find({
+            group: req.params.groupId
+        });
+        res.send(players);
+    } catch (ex) {
+        res.status(400).send(ex);
+    }
+};
+
 exports.uploadFile = async (req, res) => {
     if (Object.keys(req.files).length === 0) {
         res.send('no files');

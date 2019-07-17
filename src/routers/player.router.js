@@ -5,6 +5,8 @@ const PlayerController = require('../controllers/player.controller');
 
 const router = express.Router();
 
+router.get('/:groupId', PlayerController.findByGroup);
+
 router.post('/positions/:id', PlayerController.uploadFile);
 
 module.exports = router;
