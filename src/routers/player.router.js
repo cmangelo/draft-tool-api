@@ -9,4 +9,6 @@ router.get('/:groupId', PlayerController.findByGroup);
 
 router.post('/positions/:id', PlayerController.uploadFile);
 
+router.patch('/:playerId', PlayerController.updatePlayer);
+
 module.exports = router;

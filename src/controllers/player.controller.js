@@ -62,3 +62,28 @@ exports.uploadFile = async (req, res) => {
         }
     }
 };
+
+exports.updatePlayer = async (req, res) => {
+    let _id = req.params.playerId;
+    const body = req.body;
+    const updates = Object.keys(body);
+    const allowedUpdates = ['owner', 'draftedRound', 'draftedPick'];
+    const isValidOperation = updates.every(update => allowedUpdates.includes(update));
+
+    if (!isValidOperation) {
+        return res.status(400).send();
+    }
+
+    try {
+        const player = await Player.findByIdAndUpdate(_id, body, {
+            new: true, //is this supposed to be true?
+            runValidators: true
+        });
+        if (!player) {
+            return res.status(404).send();
+        }
+        res.send(player);
+    } catch (ex) {
+        res.status(400).send();
+    }
+}
