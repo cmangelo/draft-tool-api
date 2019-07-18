@@ -1,4 +1,95 @@
 const Player = require('../models/player.model');
+const Tier = require('../models/tier.model');
+const Group = require('../models/group.model');
+
+exports.findByPosition = async (req, res) => {
+    const position = req.params.positionId;
+    try {
+        const newestGroup = await Group.findOne({
+            position
+        }).sort({
+            createdAt: -1
+        });
+        const groupId = newestGroup._id;
+
+        const tiers = await Tier.find({
+                group: groupId
+            }).sort({
+                tier: 1
+            }).populate('players')
+            .exec();
+        res.send(tiers);
+    } catch (ex) {
+        res.status(400).send();
+    }
+}
+
+exports.uploadFile = async (req, res) => {
+    const groupId = req.params.groupId;
+
+    if (Object.keys(req.files).length === 0) {
+        res.status(400).send('no files');
+    } else {
+        try {
+            let playersCSV = req.files.players.data.toString('utf8');
+            let players = convertCSVToJS(playersCSV, req.params.id);
+
+            let tiersObject = players.reduce(groupPlayersByTier, {});
+            let groupModel = new Group({
+                position: groupId
+            });
+
+            let group = await groupModel.save();
+
+            for (const key of Object.keys(tiersObject)) {
+                const sortedPlayers = sortArray(tiersObject[key], 'rank');
+                let playerIds = [];
+                for (let player of sortedPlayers) {
+                    let playerModel = new Player(
+                        player
+                    );
+                    let saved = await playerModel.save();
+                    playerIds.push(saved._id);
+                }
+
+                const tier = new Tier({
+                    tierNumber: parseInt(key),
+                    players: playerIds,
+                    group: group._id
+                });
+                await tier.save();
+            }
+            res.status(204).send();
+        } catch (ex) {
+            res.status(400).send();
+        }
+    }
+};
+
+exports.updatePlayer = async (req, res) => {
+    let _id = req.params.playerId;
+    const body = req.body;
+    const updates = Object.keys(body);
+    const allowedUpdates = ['owner', 'draftedRound', 'draftedPick'];
+    const isValidOperation = updates.every(update => allowedUpdates.includes(update));
+
+    if (!isValidOperation) {
+        return res.status(400).send();
+    }
+
+    try {
+        const player = await Player.findByIdAndUpdate(_id, body, {
+            new: true, //is this supposed to be true?
+            runValidators: true
+        });
+        if (!player) {
+            return res.status(404).send();
+        }
+        res.send(player);
+    } catch (ex) {
+        res.status(400).send();
+    }
+}
 
 function convertCSVToJS(csv, groupId) {
     let rows = csv.split('\n');
@@ -31,59 +122,19 @@ function convertCSVToJS(csv, groupId) {
         });
     });
     return players;
-};
+}
 
-exports.findByGroup = async (req, res) => {
-    try {
-        let players = await Player.find({
-            group: req.params.groupId
-        });
-        res.send(players);
-    } catch (ex) {
-        res.status(400).send(ex);
+function groupPlayersByTier(acc, player) {
+    var tier = player.tier;
+    if (!acc[tier]) {
+        acc[tier] = [];
     }
-};
+    acc[tier].push(player);
+    return acc;
+}
 
-exports.uploadFile = async (req, res) => {
-    if (Object.keys(req.files).length === 0) {
-        res.send('no files');
-    } else {
-        try {
-            let playersCSV = req.files.players.data.toString('utf8');
-            let players = convertCSVToJS(playersCSV, req.params.id);
-            for (const p of players) {
-                let player = new Player(p);
-                await player.save();
-            }
-            res.status(204).send();
-        } catch (ex) {
-            console.log(ex.message);
-            res.status(400).send();
-        }
-    }
-};
-
-exports.updatePlayer = async (req, res) => {
-    let _id = req.params.playerId;
-    const body = req.body;
-    const updates = Object.keys(body);
-    const allowedUpdates = ['owner', 'draftedRound', 'draftedPick'];
-    const isValidOperation = updates.every(update => allowedUpdates.includes(update));
-
-    if (!isValidOperation) {
-        return res.status(400).send();
-    }
-
-    try {
-        const player = await Player.findByIdAndUpdate(_id, body, {
-            new: true, //is this supposed to be true?
-            runValidators: true
-        });
-        if (!player) {
-            return res.status(404).send();
-        }
-        res.send(player);
-    } catch (ex) {
-        res.status(400).send();
-    }
+function sortArray(arr, property) {
+    return arr.sort((a, b) => {
+        return a[property] < b[property] ? -1 : 1;
+    });
 }

@@ -5,9 +5,9 @@ const PlayerController = require('../controllers/player.controller');
 
 const router = express.Router();
 
-router.get('/:groupId', PlayerController.findByGroup);
+router.get('/:positionId', PlayerController.findByPosition);
 
-router.post('/positions/:id', PlayerController.uploadFile);
+router.post('/positions/:groupId', PlayerController.uploadFile);
 
 router.patch('/:playerId', PlayerController.updatePlayer);
 

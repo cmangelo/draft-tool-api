@@ -36,20 +36,6 @@ const playerSchema = new mongoose.Schema({
     notes: {
         type: String,
         required: true
-    },
-    group: {
-        type: Number,
-        required: true
-    },
-    owner: {
-        type: String,
-        trim: true
-    },
-    draftedRound: {
-        type: Number
-    },
-    draftedPick: {
-        type: Number
     }
 }, {
     timestamps: true
