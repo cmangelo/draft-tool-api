@@ -1,6 +1,6 @@
-const Player = require('../models/player.model');
-const Tier = require('../models/tier.model');
-const Group = require('../models/group.model');
+const Player = require('../models/players/player.model');
+const Tier = require('../models/players/tier.model');
+const Group = require('../models/players/group.model');
 
 exports.findByPosition = async (req, res) => {
     const position = req.params.positionId;
@@ -77,7 +77,7 @@ exports.uploadFile = async (req, res) => {
             res.status(400).send();
         }
     }
-};
+}
 
 exports.updatePlayer = async (req, res) => {
     let _id = req.params.playerId;
