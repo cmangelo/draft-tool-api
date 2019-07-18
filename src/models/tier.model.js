@@ -5,6 +5,10 @@ const tierSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    startingAtRank: {
+        type: Number,
+        required: true
+    },
     players: [{
         type: mongoose.Schema.Types.ObjectId,
         required: true,

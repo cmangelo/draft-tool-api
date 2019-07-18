@@ -40,24 +40,37 @@ exports.uploadFile = async (req, res) => {
             });
 
             let group = await groupModel.save();
+            let startingAtRankRunningTotal = 1;
 
             for (const key of Object.keys(tiersObject)) {
                 const sortedPlayers = sortArray(tiersObject[key], 'rank');
                 let playerIds = [];
                 for (let player of sortedPlayers) {
-                    let playerModel = new Player(
-                        player
-                    );
-                    let saved = await playerModel.save();
-                    playerIds.push(saved._id);
+                    let existingPlayer = await Player.findOne({
+                        name: player.name,
+                        team: player.team
+                    });
+
+                    if (existingPlayer) {
+                        playerIds.push(existingPlayer._id);
+                    } else {
+                        let playerModel = new Player(
+                            player
+                        );
+                        let saved = await playerModel.save();
+                        playerIds.push(saved._id);
+                    }
                 }
 
                 const tier = new Tier({
                     tierNumber: parseInt(key),
+                    startingAtRank: startingAtRankRunningTotal,
                     players: playerIds,
                     group: group._id
                 });
                 await tier.save();
+
+                startingAtRankRunningTotal += playerIds.length;
             }
             res.status(204).send();
         } catch (ex) {
@@ -135,6 +148,6 @@ function groupPlayersByTier(acc, player) {
 
 function sortArray(arr, property) {
     return arr.sort((a, b) => {
-        return a[property] < b[property] ? -1 : 1;
+        return parseInt(a[property]) < parseInt(b[property]) ? -1 : 1;
     });
 }

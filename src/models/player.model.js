@@ -13,10 +13,6 @@ const playerSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    rank: {
-        type: Number,
-        required: true
-    },
     points: {
         type: Number,
         required: true
@@ -26,10 +22,6 @@ const playerSchema = new mongoose.Schema({
         required: true
     },
     adp: {
-        type: Number,
-        required: true
-    },
-    tier: {
         type: Number,
         required: true
     },
