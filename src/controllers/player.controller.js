@@ -32,7 +32,7 @@ exports.uploadFile = async (req, res) => {
     } else {
         try {
             let playersCSV = req.files.players.data.toString('utf8');
-            let players = convertCSVToJS(playersCSV, req.params.id);
+            let players = convertCSVToJS(playersCSV, groupId);
 
             let tiersObject = players.reduce(groupPlayersByTier, {});
             let groupModel = new Group({
@@ -52,6 +52,10 @@ exports.uploadFile = async (req, res) => {
                     });
 
                     if (existingPlayer) {
+                        if (existingPlayer.position = -1) {
+                            existingPlayer.position = groupId;
+                            await existingPlayer.save();
+                        }
                         playerIds.push(existingPlayer._id);
                     } else {
                         let playerModel = new Player(
@@ -72,7 +76,7 @@ exports.uploadFile = async (req, res) => {
 
                 startingAtRankRunningTotal += playerIds.length;
             }
-            res.status(204).send();
+            res.status(201).send();
         } catch (ex) {
             res.status(400).send();
         }
@@ -121,6 +125,10 @@ function convertCSVToJS(csv, groupId) {
                 player[headers[ind]] = field.substring(1, field.length - 1);
             }
         });
+
+        let position = parseInt(groupId) !== 4 ? groupId : -1;
+        console.log(position, groupId)
+
         players.push({
             bye: player['Bye Week'],
             adp: player['ADP'],
@@ -131,7 +139,7 @@ function convertCSVToJS(csv, groupId) {
             risk: player['Risk'],
             team: player['Team'],
             tier: player['Tier'],
-            group: groupId
+            position
         });
     });
     return players;

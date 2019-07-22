@@ -23,11 +23,6 @@ const tierSchema = new mongoose.Schema({
     timestamps: true,
 });
 
-// tierSchema.virtual('players', {
-//     ref: 'Player',
-//     localField: '_id',
-// });
-
 tierSchema.set('toJSON', {
     virtuals: true
 });
